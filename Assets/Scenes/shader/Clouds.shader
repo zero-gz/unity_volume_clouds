@@ -51,7 +51,6 @@
 	uniform sampler2D _MainTex;
 	uniform float4 _MainTex_TexelSize;
 
-	uniform sampler2D _AltoClouds;
 	uniform sampler3D _ShapeTexture;
 	uniform sampler3D _DetailTexture;
 	uniform sampler2D _WeatherTexture;
@@ -94,10 +93,6 @@
 	uniform float3 _WindOffset;
 	uniform float2 _CoverageWindOffset;
 	uniform float2 _HighCloudsWindOffset;
-
-	uniform float _CoverageHigh;
-	uniform float _CoverageHighScale;
-	uniform float _HighCloudsScale;
 
 	uniform float2 _LowFreqMinMax;
 	uniform float _HighFreqModifier;
@@ -188,7 +183,6 @@
 	// samples cloud density
 	float sampleCloudDensity(float3 p, float heightFraction, float3 weatherData, float lod, bool sampleDetail)
 	{
-		lod = 0.0f;
 		float3 pos = p + _WindOffset; // add wind offset
 		pos += heightFraction * _WindDirection * 700.0; // shear at higher altitude
 
@@ -199,12 +193,13 @@
 		float cloudSample = tex3Dlod(_ShapeTexture, float4(pos * _Scale, lod)).r; // sample cloud shape texture
 		cloudSample = remap(cloudSample * pow(1.2 - heightFraction, 0.1), _LowFreqMinMax.x, _LowFreqMinMax.y, 0.0, 1.0); // pick certain range from sample texture
 #endif
+		
 		cloudSample *= getDensityHeightGradient(heightFraction, weatherData); // multiply cloud by its type gradient
-
+		
 		float cloudCoverage = weatherData.r;
 		cloudSample = saturate(remap(cloudSample, saturate(heightFraction / cloudCoverage), 1.0, 0.0, 1.0)); // Change cloud coverage based by height and use remap to reduce clouds outside coverage
 		cloudSample *= cloudCoverage; // multiply by cloud coverage to smooth them out, GPU Pro 7
-
+		
 #if defined(DEBUG_NO_HIGH_FREQ_NOISE)
 		cloudSample = remap(cloudSample, 0.2, 1.0, 0.0, 1.0);
 #else
@@ -248,15 +243,9 @@
 	}
 
 	float calculateLightEnergy(float density, float cosAngle, float powderDensity) { // calculates direct light components and multiplies them together
-		float beer = beerLaw(density);
-		float sliver_effect = powderEffect(powderDensity, cosAngle);
-		float beerPowder = 2.0 * beer * sliver_effect;
+		float beerPowder = 2.0 * beerLaw(density) * powderEffect(powderDensity, cosAngle);
 		float HG = max(HenyeyGreensteinPhase(cosAngle, _HenyeyGreensteinGForward), HenyeyGreensteinPhase(cosAngle, _HenyeyGreensteinGBackward)) * 0.07 + 0.8;
-		//return beerPowder * HG;
-		//return beerPowder;
-		//return HG;
-		//return beer * sliver_effect*1.5f;
-		return beer*1.5f;
+		return beerPowder * HG;
 	}
 
 	float randSimple(float n) // simple hash function for more random light vectors
@@ -279,6 +268,7 @@
 		{ -0.2, 0.6, -0.8 },
 		{ 0.4, 0.3, 0.9 }
 		};
+
 		float heightFraction;
 		float densityAlongCone = 0.0;
 		const int steps = 5; // light cone step count
@@ -313,18 +303,17 @@
 			j++;
 		}
 #else
-		/*
 		pos += 32.0 * _LightStepLength * lightDir; // light sample from further away
 		weatherData = sampleWeather(pos);
 		heightFraction = getHeightFractionForPoint(pos);
-		//densityAlongCone += sampleCloudDensity(pos, heightFraction, weatherData, lod + 2, false) * weatherDensity(weatherData) * 3.0;
-		*/
+		densityAlongCone += sampleCloudDensity(pos, heightFraction, weatherData, lod + 2, false) * weatherDensity(weatherData) * 3.0;
 #endif
 		
 		return calculateLightEnergy(densityAlongCone, cosAngle, density) * _SunColor;
 	}
 
 	// raymarches clouds
+	// 这里的参数，ro起点，rd光线步进方向（一个步长的单位），steps总共的步长数, depth当前深度　cosAngle是rd方向与Ｌ的夹角
 	fixed4 raymarch(float3 ro, float3 rd, float steps, float depth, float cosAngle)
 	{
 		float3 pos = ro;
@@ -369,8 +358,6 @@
 				}
 
 				float4 particle = cloudDensity; // construct cloud particle
-
-				//float3 directLight = beerLaw(cloudDensity)*_SunColor;
 				float3 directLight = sampleConeToLight(pos, _SunDir, cosAngle, cloudDensity, weatherData, lod); // calculate direct light energy and color
 				float3 ambientLight = lerp(_CloudBaseColor, _CloudTopColor, heightFraction); // and ambient
 
@@ -442,32 +429,6 @@
 		return noise;
 	}
 
-	fixed4 altoClouds(float3 ro, float3 rd, float depth, float cosAngle) { // samples high altitude clouds
-		fixed4 res = 0.0;
-		float3 pos = findRayStartPos(ro, rd, _PlanetCenter, _SphereSize + _CloudHeightMinMax.y + 3000.0); // finds sample position
-		float dist = distance(ro, pos);
-		if (dist < depth && pos.y > _ZeroPoint.y && dist > 0.0) { // chekcs for depth texture, above ground 
-
-			float alto = tex2Dlod(_AltoClouds, float4((pos.xz + _HighCloudsWindOffset) * _HighCloudsScale, 0, 0)).r * 2.0; // samples high altitude cloud texture
-
-			float coverage = tex2Dlod(_WeatherTexture, float4((pos.xz + _HighCloudsWindOffset) * _CoverageHighScale, 0, 0)).r; // same as with volumetric clouds
-			coverage = saturate(coverage - _CoverageHigh);
-
-			alto = remap(alto, 1.0 - coverage, 1.0, 0.0, 1.0);
-			alto *= coverage;
-			float3 directLight = max(HenyeyGreensteinPhase(cosAngle, _HenyeyGreensteinGForward), HenyeyGreensteinPhase(cosAngle, _HenyeyGreensteinGBackward)) * _SunColor; // for high altitude clouds uses HG phase
-			directLight *= _SunLightFactor * 0.2;
-			float3 ambientLight = _CloudTopColor * _AmbientLightFactor * 1.5; // ambient light is the high cloud layer ambient color
-			float4 aLparticle = float4(min(ambientLight + directLight, 0.7), alto);
-
-			aLparticle.rgb *= aLparticle.a;
-
-			res = aLparticle;
-		}
-
-		return saturate(res);
-	}
-
 	fixed4 frag(v2f i) : SV_Target
 	{
 		// ray origin (camera position)
@@ -525,20 +486,19 @@
 			return 0.0;
 		}
 		re = findRayStartPos(ro, rd, _PlanetCenter, _SphereSize + _CloudHeightMinMax.y);
-		steps = lerp(_Steps, _Steps * 0.5, rd.y);
-		stepSize = (distance(re, rs)) / steps;
+		steps = lerp(_Steps, _Steps * 0.5, rd.y); //这里还是不太懂的，搞个0.5，还有rd.y的lerp因子是个啥意思？这不是算光追的总步数么？
+		stepSize = (distance(re, rs)) / steps; //stepSize　光追的每一步步长
 #endif
 
 		// Ray end pos
 
-		/*
+
 #if defined(RANDOM_JITTER_WHITE)
 		rs += rd * stepSize * rand(_Time.zw + duv) * BIG_STEP * 0.75;
 #endif
 #if defined(RANDOM_JITTER_BLUE)
 		rs += rd * stepSize * BIG_STEP * 0.75 * getRandomRayOffset((duv + _Randomness.xy) * _ScreenParams.xy * _BlueNoise_TexelSize.xy);
 #endif
-*/
 
 		// Convert from depth buffer (eye space) to true distance from camera
 		// This is done by multiplying the eyespace depth by the length of the "z-normalized"
@@ -550,10 +510,8 @@
 		}
 		depth *= _FarPlane;
 		float cosAngle = dot(rd, _SunDir);
-		//fixed4 clouds2D = altoClouds(ro, rd, depth, cosAngle); // sample high altitude clouds
+		fixed4 clouds2D = float4(0.0, 0.0, 0.0, 0.0); // sample high altitude clouds
 		fixed4 clouds3D = raymarch(rs, rd * stepSize, steps, depth, cosAngle); // raymarch volumetric clouds
-		return clouds3D;
-		/*
 #if defined(ALLOW_IN_CLOUDS)
 		if (aboveClouds) // use premultiplied alpha blending to combine low and high clouds
 		{
@@ -567,7 +525,6 @@
 #else
 		return clouds2D * (1.0 - clouds3D.a) + clouds3D;
 #endif
-*/
 	}
 		ENDCG
 	}

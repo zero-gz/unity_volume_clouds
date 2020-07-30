@@ -1,18 +1,11 @@
-﻿using UnityEngine;
+﻿// https://github.com/Flafla2/Generic-Raymarch-Unity
+using UnityEngine;
 using UnityEditor;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(Camera))]
-public class CloudScript : MonoBehaviour
+public class CloudScript: MonoBehaviour //: SceneViewFilter
 {
-
-    public enum RandomJitter
-    {
-        Off,
-        Random,
-        BlueNoise
-    }
-
     [HeaderAttribute("Debugging")]
     public bool debugNoLowFreqNoise = false;
     public bool debugNoHighFreqNoise = false;
@@ -26,17 +19,12 @@ public class CloudScript : MonoBehaviour
     public bool allowFlyingInClouds = false;
     [Range(1, 8)]
     public int downSample = 1;
-    public Texture2D blueNoiseTexture;
-    public RandomJitter randomJitterNoise = RandomJitter.BlueNoise;
-    public bool temporalAntiAliasing = true;
 
     [HeaderAttribute("Cloud modeling")]
     public Gradient gradientLow;
     public Gradient gradientMed;
     public Gradient gradientHigh;
     public Texture2D curlNoise;
-    public TextAsset lowFreqNoise;
-    public TextAsset highFreqNoise;
     public float startHeight = 1500.0f;
     public float thickness = 4000.0f;
     public float planetSize = 35000.0f;
@@ -57,19 +45,11 @@ public class CloudScript : MonoBehaviour
     public float curlDistortAmount = 407.0f;
     [Range(0.0f, 1.0f)]
     public float weatherScale = 0.1f;
+    public Texture2D weatherTexture;
     [Range(0.0f, 2.0f)]
     public float coverage = 0.92f;
     [Range(0.0f, 2.0f)]
     public float cloudSampleMultiplier = 1.0f;
-
-    [HeaderAttribute("High altitude clouds")]
-    public Texture2D cloudsHighTexture;
-    [Range(0.0f, 2.0f)]
-    public float coverageHigh = 1.0f;
-    [Range(0.0f, 2.0f)]
-    public float highCoverageScale = 1.0f;
-    [Range(0.0f, 1.0f)]
-    public float highCloudsScale = 0.5f;
 
     [HeaderAttribute("Cloud Lighting")]
     public Light sunLight;
@@ -89,7 +69,6 @@ public class CloudScript : MonoBehaviour
     public float lightStepLength = 64.0f;
     [Range(0.0f, 1.0f)]
     public float lightConeRadius = 0.4f;
-    public bool randomUnitSphere = true;
     [Range(0.0f, 4.0f)]
     public float density = 1.0f;
     public bool aLotMoreLightSamples = false;
@@ -251,7 +230,7 @@ public class CloudScript : MonoBehaviour
     [ImageEffectOpaque]
     public void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        if (CloudMaterial == null || curlNoise == null || blueNoiseTexture == null || lowFreqNoise == null || highFreqNoise == null) // if some script public parameters are missing, do nothing
+        if (CloudMaterial == null || curlNoise == null) // if some script public parameters are missing, do nothing
         {
             Graphics.Blit(source, destination); // do nothing
             return;
@@ -283,49 +262,26 @@ public class CloudScript : MonoBehaviour
         updateMaterialKeyword(debugNoHighFreqNoise, "DEBUG_NO_HIGH_FREQ_NOISE");
         updateMaterialKeyword(debugNoCurlNoise, "DEBUG_NO_CURL");
         updateMaterialKeyword(allowFlyingInClouds, "ALLOW_IN_CLOUDS");
-        updateMaterialKeyword(randomUnitSphere, "RANDOM_UNIT_SPHERE");
         updateMaterialKeyword(aLotMoreLightSamples, "SLOW_LIGHTING");
 
-        switch (randomJitterNoise)
-        {
-            case RandomJitter.Off:
-                updateMaterialKeyword(false, "RANDOM_JITTER_WHITE");
-                updateMaterialKeyword(false, "RANDOM_JITTER_BLUE");
-                break;
-            case RandomJitter.Random:
-                updateMaterialKeyword(true, "RANDOM_JITTER_WHITE");
-                updateMaterialKeyword(false, "RANDOM_JITTER_BLUE");
-                break;
-            case RandomJitter.BlueNoise:
-                updateMaterialKeyword(false, "RANDOM_JITTER_WHITE");
-                updateMaterialKeyword(true, "RANDOM_JITTER_BLUE");
-                break;
-        }
+        updateMaterialKeyword(false, "RANDOM_JITTER_WHITE");
+        updateMaterialKeyword(false, "RANDOM_JITTER_BLUE");
 
         // send uniforms to shader
         CloudMaterial.SetVector("_SunDir", sunLight.transform ? (-sunLight.transform.forward).normalized : Vector3.up);
         CloudMaterial.SetVector("_PlanetCenter", planetZeroCoordinate - new Vector3(0, planetSize, 0));
         CloudMaterial.SetVector("_ZeroPoint", planetZeroCoordinate);
         CloudMaterial.SetColor("_SunColor", sunColor);
-        //CloudMaterial.SetColor("_SunColor", sunLight.color);
 
         CloudMaterial.SetColor("_CloudBaseColor", cloudBaseColor);
         CloudMaterial.SetColor("_CloudTopColor", cloudTopColor);
         CloudMaterial.SetFloat("_AmbientLightFactor", ambientLightFactorUpdated);
         CloudMaterial.SetFloat("_SunLightFactor", sunLightFactorUpdated);
-        //CloudMaterial.SetFloat("_AmbientLightFactor", sunLight.intensity * ambientLightFactor * 0.3f);
-        //CloudMaterial.SetFloat("_SunLightFactor", sunLight.intensity * sunLightFactor);
 
         CloudMaterial.SetTexture("_ShapeTexture", _cloudShapeTexture);
         CloudMaterial.SetTexture("_DetailTexture", _cloudDetailTexture);
         CloudMaterial.SetTexture("_CurlNoise", curlNoise);
-        CloudMaterial.SetTexture("_BlueNoise", blueNoiseTexture);
         CloudMaterial.SetVector("_Randomness", new Vector4(Random.value, Random.value, Random.value, Random.value));
-        CloudMaterial.SetTexture("_AltoClouds", cloudsHighTexture);
-
-        CloudMaterial.SetFloat("_CoverageHigh", 1.0f - coverageHigh);
-        CloudMaterial.SetFloat("_CoverageHighScale", highCoverageScale * weatherScale * 0.001f);
-        CloudMaterial.SetFloat("_HighCloudsScale", highCloudsScale * 0.002f);
 
         CloudMaterial.SetFloat("_CurlDistortAmount", 150.0f + curlDistortAmount);
         CloudMaterial.SetFloat("_CurlDistortScale", curlDistortScale * noiseScale);
@@ -354,6 +310,7 @@ public class CloudScript : MonoBehaviour
         
 
         CloudMaterial.SetFloat("_Density", density);
+        CloudMaterial.SetTexture("_WeatherTexture", weatherTexture);
 
         CloudMaterial.SetFloat("_WindSpeed", _multipliedWindSpeed);
         CloudMaterial.SetVector("_WindDirection", _windDirectionVector);
@@ -376,8 +333,8 @@ public class CloudScript : MonoBehaviour
         RenderTexture rtClouds = RenderTexture.GetTemporary((int)(source.width / ((float)downSample)), (int)(source.height / ((float)downSample)), 0, source.format, RenderTextureReadWrite.Default, source.antiAliasing);
         CustomGraphicsBlit(source, rtClouds, CloudMaterial, 0);
 
-        UpscaleMaterial.SetTexture("_Clouds", rtClouds);
-
+            UpscaleMaterial.SetTexture("_Clouds", rtClouds);
+        
         // Apply clouds to background
         Graphics.Blit(source, destination, UpscaleMaterial, 0);
         RenderTexture.ReleaseTemporary(rtClouds);
