@@ -1,10 +1,9 @@
-﻿// https://github.com/Flafla2/Generic-Raymarch-Unity
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
-[ExecuteInEditMode]
+//[ExecuteInEditMode]
 [RequireComponent(typeof(Camera))]
-public class CloudScript: MonoBehaviour //: SceneViewFilter
+public class CloudScript: MonoBehaviour
 {
     [HeaderAttribute("Debugging")]
     public bool debugNoLowFreqNoise = false;
@@ -71,7 +70,6 @@ public class CloudScript: MonoBehaviour //: SceneViewFilter
     public float lightConeRadius = 0.4f;
     [Range(0.0f, 4.0f)]
     public float density = 1.0f;
-    public bool aLotMoreLightSamples = false;
 
     [HeaderAttribute("Animating")]
     public float globalMultiplier = 1.0f;
@@ -262,10 +260,6 @@ public class CloudScript: MonoBehaviour //: SceneViewFilter
         updateMaterialKeyword(debugNoHighFreqNoise, "DEBUG_NO_HIGH_FREQ_NOISE");
         updateMaterialKeyword(debugNoCurlNoise, "DEBUG_NO_CURL");
         updateMaterialKeyword(allowFlyingInClouds, "ALLOW_IN_CLOUDS");
-        updateMaterialKeyword(aLotMoreLightSamples, "SLOW_LIGHTING");
-
-        updateMaterialKeyword(false, "RANDOM_JITTER_WHITE");
-        updateMaterialKeyword(false, "RANDOM_JITTER_BLUE");
 
         // send uniforms to shader
         CloudMaterial.SetVector("_SunDir", sunLight.transform ? (-sunLight.transform.forward).normalized : Vector3.up);

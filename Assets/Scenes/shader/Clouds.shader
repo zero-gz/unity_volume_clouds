@@ -19,9 +19,6 @@
 #pragma multi_compile __ DEBUG_NO_HIGH_FREQ_NOISE
 #pragma multi_compile __ DEBUG_NO_CURL
 #pragma multi_compile __ ALLOW_IN_CLOUDS
-#pragma multi_compile __ RANDOM_JITTER_WHITE RANDOM_JITTER_BLUE
-#pragma multi_compile __ RANDOM_UNIT_SPHERE
-#pragma multi_compile __ SLOW_LIGHTING
 
 #include "UnityCG.cginc"
 
@@ -283,32 +280,11 @@
 			densityAlongCone += sampleCloudDensity(p, heightFraction, weatherData, lod + ((float)i) * 0.5, true) * weatherDensity(weatherData);
 		}
 
-#if defined(SLOW_LIGHTING) // if doing slow lighting then do more samples in straight line
-		pos += 24.0 * _LightStepLength * lightDir;
-		weatherData = sampleWeather(pos);
-		heightFraction = getHeightFractionForPoint(pos);
-		densityAlongCone += sampleCloudDensity(pos, heightFraction, weatherData, lod, true) * 2.0;
-		int j = 0;
-		while (1) {
-			if (j > 22) {
-				break;
-			}
-			pos += 4.25 * _LightStepLength * lightDir;
-			weatherData = sampleWeather(pos);
-			if (weatherData.r > 0.05) {
-				heightFraction = getHeightFractionForPoint(pos);
-				densityAlongCone += sampleCloudDensity(pos, heightFraction, weatherData, lod, true);
-			}
-
-			j++;
-		}
-#else
 		pos += 32.0 * _LightStepLength * lightDir; // light sample from further away
 		weatherData = sampleWeather(pos);
 		heightFraction = getHeightFractionForPoint(pos);
 		densityAlongCone += sampleCloudDensity(pos, heightFraction, weatherData, lod + 2, false) * weatherDensity(weatherData) * 3.0;
-#endif
-		
+
 		return calculateLightEnergy(densityAlongCone, cosAngle, density) * _SunColor;
 	}
 
@@ -491,14 +467,6 @@
 #endif
 
 		// Ray end pos
-
-
-#if defined(RANDOM_JITTER_WHITE)
-		rs += rd * stepSize * rand(_Time.zw + duv) * BIG_STEP * 0.75;
-#endif
-#if defined(RANDOM_JITTER_BLUE)
-		rs += rd * stepSize * BIG_STEP * 0.75 * getRandomRayOffset((duv + _Randomness.xy) * _ScreenParams.xy * _BlueNoise_TexelSize.xy);
-#endif
 
 		// Convert from depth buffer (eye space) to true distance from camera
 		// This is done by multiplying the eyespace depth by the length of the "z-normalized"
