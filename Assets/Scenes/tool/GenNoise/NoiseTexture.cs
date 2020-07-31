@@ -9,7 +9,7 @@ using UnityEngine.Assertions;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-[ExecuteInEditMode]
+//[ExecuteInEditMode]
 public class NoiseTexture : MonoBehaviour
 {
     public enum NoiseType { Perlin, Worley, NewWorley, PerlinWorley }
@@ -304,6 +304,16 @@ public class NoiseTexture : MonoBehaviour
         this.FillTexture();
         this.FillDebugTexture();
     }
+    
+
+        /*
+    void RegenerateNoise()
+    {
+        this.Regenerate();
+        this.FillTexture();
+        this.FillDebugTexture();
+    }
+    */
 
     public void Draw(Vector2 pos)
     {
