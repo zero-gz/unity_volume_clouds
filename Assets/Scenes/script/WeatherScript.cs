@@ -13,7 +13,7 @@ public class WeatherScript : MonoBehaviour
 
     //private MeshRenderer weatherVisualiserRenderer;
 
-    private RenderTexture rt; // weather texture at the moment
+    public RenderTexture rt; // weather texture at the moment
     private bool isChangingWeather = false;
 
     private RenderTexture prevWeatherTexture; // previous weather texture

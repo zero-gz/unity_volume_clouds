@@ -610,7 +610,7 @@ Camera:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
@@ -839,6 +839,7 @@ MonoBehaviour:
   curlDistortScale: 7.44
   curlDistortAmount: 407
   weatherScale: 0.105
+  use_system_weather_texture: 0
   weatherTexture: {fileID: 2800000, guid: 7140a4529452fc34f90e3cefc3e35c74, type: 3}
   coverage: 0.743
   cloudSampleMultiplier: 0.986
@@ -987,6 +988,7 @@ MonoBehaviour:
   useCustomTexture: 0
   customWeatherTexture: {fileID: 0}
   blendTime: 30
+  rt: {fileID: 0}
 --- !u!4 &681773654
 Transform:
   m_ObjectHideFlags: 0
@@ -1743,7 +1745,8 @@ MonoBehaviour:
   curlDistortScale: 6.95
   curlDistortAmount: 407
   weatherScale: 0.154
-  weatherTexture: {fileID: 2800000, guid: 7140a4529452fc34f90e3cefc3e35c74, type: 3}
+  use_system_weather_texture: 1
+  weatherTexture: {fileID: 2800000, guid: 18234e57bbb9ee34b8657895f9beec05, type: 3}
   coverage: 1
   cloudSampleMultiplier: 1
   sunLight: {fileID: 170076734}
@@ -2089,6 +2092,7 @@ MonoBehaviour:
   curlDistortScale: 7.44
   curlDistortAmount: 407
   weatherScale: 0.39
+  use_system_weather_texture: 1
   weatherTexture: {fileID: 2800000, guid: 18234e57bbb9ee34b8657895f9beec05, type: 3}
   coverage: 0.61
   cloudSampleMultiplier: 1.02
