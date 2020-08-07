@@ -18,7 +18,10 @@
 #pragma multi_compile __ DEBUG_NO_LOW_FREQ_NOISE
 #pragma multi_compile __ DEBUG_NO_HIGH_FREQ_NOISE
 #pragma multi_compile __ DEBUG_NO_CURL
-#pragma multi_compile __ ALLOW_IN_CLOUDS
+#pragma multi_compile __ DEBUG_NO_BEER
+#pragma multi_compile __ DEBUG_NO_POWDER_EFFECT
+#pragma multi_compile __ DEBUG_NO_HG
+#pragma multi_compile __ DEBUG_NO_GRADIENT
 
 #include "UnityCG.cginc"
 
@@ -180,6 +183,7 @@
 	// samples cloud density
 	float sampleCloudDensity(float3 p, float heightFraction, float3 weatherData, float lod, bool sampleDetail)
 	{
+		lod = 0.0f;
 		float3 pos = p + _WindOffset; // add wind offset
 		pos += heightFraction * _WindDirection * 700.0; // shear at higher altitude
 
@@ -191,7 +195,10 @@
 		cloudSample = remap(cloudSample * pow(1.2 - heightFraction, 0.1), _LowFreqMinMax.x, _LowFreqMinMax.y, 0.0, 1.0); // pick certain range from sample texture
 #endif
 		
+#if DEBUG_NO_GRADIENT
+#else
 		cloudSample *= getDensityHeightGradient(heightFraction, weatherData); // multiply cloud by its type gradient
+#endif
 		
 		float cloudCoverage = weatherData.r;
 		cloudSample = saturate(remap(cloudSample, saturate(heightFraction / cloudCoverage), 1.0, 0.0, 1.0)); // Change cloud coverage based by height and use remap to reduce clouds outside coverage
@@ -240,9 +247,25 @@
 	}
 
 	float calculateLightEnergy(float density, float cosAngle, float powderDensity) { // calculates direct light components and multiplies them together
-		float beerPowder = 2.0 * beerLaw(density) * powderEffect(powderDensity, cosAngle);
+#if DEBUG_NO_BEER
+		float beer = 0.0f;
+#else
+		float beer = beerLaw(density)*2.0f;
+#endif
+
+#if DEBUG_NO_POWDER_EFFECT
+		float powder_effect = 1.0f;
+#else
+		float powder_effect = powderEffect(powderDensity, cosAngle);
+#endif
+
+#if DEBUG_NO_HG
+		float HG = 1.0f;
+#else
 		float HG = max(HenyeyGreensteinPhase(cosAngle, _HenyeyGreensteinGForward), HenyeyGreensteinPhase(cosAngle, _HenyeyGreensteinGBackward)) * 0.07 + 0.8;
-		return beerPowder * HG;
+#endif
+		float result = beer * powder_effect * HG;
+		return result;
 	}
 
 	float randSimple(float n) // simple hash function for more random light vectors
@@ -305,11 +328,10 @@
 				break;  // if it is then raymarch ends
 			}
 			float heightFraction = getHeightFractionForPoint(pos);
-#if defined(ALLOW_IN_CLOUDS) // if it is allowed to fly in the clouds, then we need to check that the sample position is above the ground and in the cloud layer
+
 			if (pos.y < _ZeroPoint.y || heightFraction < 0.0 || heightFraction > 1.0) {
 				break;
 			}
-#endif
 			float3 weatherData = sampleWeather(pos); // sample weather
 			if (weatherData.r <= 0.1) // if value is low, then continue marching, at some specific weather textures makes it a bit faster.
 			{
@@ -423,7 +445,6 @@
 		float steps;
 		float stepSize;
 		// Ray start pos
-#if defined(ALLOW_IN_CLOUDS) // if in cloud flying is allowed, then figure out if camera is below, above or in the cloud layer and set 
 		// starting and end point accordingly.
 		bool aboveClouds = false;
 		float distanceCameraPlanet = distance(_CameraWS, _PlanetCenter);
@@ -455,17 +476,6 @@
 			stepSize = (distance(re, rs)) / steps;
 		}
 
-#else
-		rs = findRayStartPos(ro, rd, _PlanetCenter, _SphereSize + _CloudHeightMinMax.x);
-		if (rs.y < _ZeroPoint.y) // If ray starting position is below horizon
-		{
-			return 0.0;
-		}
-		re = findRayStartPos(ro, rd, _PlanetCenter, _SphereSize + _CloudHeightMinMax.y);
-		steps = lerp(_Steps, _Steps * 0.5, rd.y); //这里还是不太懂的，搞个0.5，还有rd.y的lerp因子是个啥意思？这不是算光追的总步数么？
-		stepSize = (distance(re, rs)) / steps; //stepSize　光追的每一步步长
-#endif
-
 		// Ray end pos
 
 		// Convert from depth buffer (eye space) to true distance from camera
@@ -478,21 +488,8 @@
 		}
 		depth *= _FarPlane;
 		float cosAngle = dot(rd, _SunDir);
-		fixed4 clouds2D = float4(0.0, 0.0, 0.0, 0.0); // sample high altitude clouds
 		fixed4 clouds3D = raymarch(rs, rd * stepSize, steps, depth, cosAngle); // raymarch volumetric clouds
-#if defined(ALLOW_IN_CLOUDS)
-		if (aboveClouds) // use premultiplied alpha blending to combine low and high clouds
-		{
-			return clouds3D * (1.0 - clouds2D.a) + clouds2D;
-		}
-		else
-		{
-			return clouds2D * (1.0 - clouds3D.a) + clouds3D;
-		}
-
-#else
-		return clouds2D * (1.0 - clouds3D.a) + clouds3D;
-#endif
+		return clouds3D;
 	}
 		ENDCG
 	}

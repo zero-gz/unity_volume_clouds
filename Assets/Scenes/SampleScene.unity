@@ -594,7 +594,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!81 &534669903
 AudioListener:
   m_ObjectHideFlags: 0
@@ -610,7 +610,7 @@ Camera:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
@@ -692,7 +692,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   debugNoLowFreqNoise: 0
   debugNoHighFreqNoise: 0
-  debugNoCurlNoise: 0
+  debugNoCurlNoise: 1
+  debugNoHG: 0
+  debugNoPowderEffect: 0
+  debugNoBeer: 0
+  debugNoGradient: 0
   steps: 128
   adjustDensity: 1
   stepDensityAdjustmentCurve:
@@ -737,7 +741,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  allowFlyingInClouds: 1
   downSample: 1
   gradientLow:
     serializedVersion: 2
@@ -745,7 +748,7 @@ MonoBehaviour:
     key1: {r: 1, g: 1, b: 1, a: 1}
     key2: {r: 1, g: 1, b: 1, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 1, g: 1, b: 1, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 0, g: 0, b: 0, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
@@ -753,7 +756,7 @@ MonoBehaviour:
     ctime1: 2506
     ctime2: 6554
     ctime3: 20046
-    ctime4: 65535
+    ctime4: 20046
     ctime5: 0
     ctime6: 0
     ctime7: 0
@@ -1543,7 +1546,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1513911992
 Transform:
   m_ObjectHideFlags: 0
@@ -1598,7 +1601,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   debugNoLowFreqNoise: 0
   debugNoHighFreqNoise: 0
-  debugNoCurlNoise: 0
+  debugNoCurlNoise: 1
+  debugNoHG: 0
+  debugNoPowderEffect: 0
+  debugNoBeer: 0
+  debugNoGradient: 0
   steps: 128
   adjustDensity: 1
   stepDensityAdjustmentCurve:
@@ -1643,7 +1650,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  allowFlyingInClouds: 1
   downSample: 1
   gradientLow:
     serializedVersion: 2
@@ -1886,7 +1892,7 @@ GameObject:
   - component: {fileID: 1860261368}
   m_Layer: 0
   m_Name: MainCamera_mod
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1945,7 +1951,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   debugNoLowFreqNoise: 0
   debugNoHighFreqNoise: 0
-  debugNoCurlNoise: 0
+  debugNoCurlNoise: 1
+  debugNoHG: 0
+  debugNoPowderEffect: 0
+  debugNoBeer: 0
+  debugNoGradient: 0
   steps: 128
   adjustDensity: 1
   stepDensityAdjustmentCurve:
@@ -1990,7 +2000,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  allowFlyingInClouds: 1
   downSample: 1
   gradientLow:
     serializedVersion: 2

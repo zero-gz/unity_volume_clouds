@@ -8,14 +8,17 @@ public class CloudScript: MonoBehaviour
     [HeaderAttribute("Debugging")]
     public bool debugNoLowFreqNoise = false;
     public bool debugNoHighFreqNoise = false;
-    public bool debugNoCurlNoise = false;
+    public bool debugNoCurlNoise = true;
+    public bool debugNoHG = false;
+    public bool debugNoPowderEffect = false;
+    public bool debugNoBeer = false;
+    public bool debugNoGradient = false;
 
     [HeaderAttribute("Performance")]
     [Range(1, 256)]
     public int steps = 128;
     public bool adjustDensity = true;
     public AnimationCurve stepDensityAdjustmentCurve = new AnimationCurve(new Keyframe(0.0f, 3.019f), new Keyframe(0.25f, 1.233f), new Keyframe(0.5f, 1.0f), new Keyframe(1.0f, 0.892f));
-    public bool allowFlyingInClouds = false;
     [Range(1, 8)]
     public int downSample = 1;
 
@@ -261,9 +264,14 @@ public class CloudScript: MonoBehaviour
         updateMaterialKeyword(debugNoLowFreqNoise, "DEBUG_NO_LOW_FREQ_NOISE");
         updateMaterialKeyword(debugNoHighFreqNoise, "DEBUG_NO_HIGH_FREQ_NOISE");
         updateMaterialKeyword(debugNoCurlNoise, "DEBUG_NO_CURL");
-        updateMaterialKeyword(allowFlyingInClouds, "ALLOW_IN_CLOUDS");
 
-        // send uniforms to shader
+        updateMaterialKeyword(debugNoBeer, "DEBUG_NO_BEER");
+        updateMaterialKeyword(debugNoPowderEffect, "DEBUG_NO_POWDER_EFFECT");
+        updateMaterialKeyword(debugNoHG, "DEBUG_NO_HG");
+        updateMaterialKeyword(debugNoGradient, "DEBUG_NO_GRADIENT");
+        
+
+    // send uniforms to shader
         CloudMaterial.SetVector("_SunDir", sunLight.transform ? (-sunLight.transform.forward).normalized : Vector3.up);
         CloudMaterial.SetVector("_PlanetCenter", planetZeroCoordinate - new Vector3(0, planetSize, 0));
         CloudMaterial.SetVector("_ZeroPoint", planetZeroCoordinate);
