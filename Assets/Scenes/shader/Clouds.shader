@@ -22,6 +22,7 @@
 #pragma multi_compile __ DEBUG_NO_POWDER_EFFECT
 #pragma multi_compile __ DEBUG_NO_HG
 #pragma multi_compile __ DEBUG_NO_GRADIENT
+#pragma multi_compile __ DEBUG_NO_LIGHT_CONE
 
 #include "UnityCG.cginc"
 
@@ -244,6 +245,7 @@
 	{
 		float powder = 1.0 - exp(-density * 2.0);
 		return lerp(1.0f, powder, saturate((-cosAngle * 0.5f) + 0.5f));
+		//return powder;
 	}
 
 	float calculateLightEnergy(float density, float cosAngle, float powderDensity) { // calculates direct light components and multiplies them together
@@ -257,6 +259,7 @@
 		float powder_effect = 1.0f;
 #else
 		float powder_effect = powderEffect(powderDensity, cosAngle);
+		//float powder_effect = powderEffect(density, cosAngle);
 #endif
 
 #if DEBUG_NO_HG
@@ -320,7 +323,7 @@
 		float lod = 0.0;
 		float zeroCount = 0.0; // number of times cloud sample has been 0
 		float stepLength = BIG_STEP; // step length multiplier, 1.0 when doing small steps
-
+		float real_calc = 0.0;
 
 		for (float i = 0.0; i < steps; i += stepLength)
 		{
@@ -335,6 +338,9 @@
 			float3 weatherData = sampleWeather(pos); // sample weather
 			if (weatherData.r <= 0.1) // if value is low, then continue marching, at some specific weather textures makes it a bit faster.
 			{
+				//if (real_calc > 0.0)
+				//	break;
+
 				pos += rd * stepLength;
 				zeroCount += 1.0;
 				stepLength = zeroCount > 10.0 ? BIG_STEP : 1.0;
@@ -356,7 +362,11 @@
 				}
 
 				float4 particle = cloudDensity; // construct cloud particle
+#if DEBUG_NO_LIGHT_CONE
+				float3 directLight = calculateLightEnergy(cloudDensity, cosAngle, cloudDensity) * _SunColor;
+#else
 				float3 directLight = sampleConeToLight(pos, _SunDir, cosAngle, cloudDensity, weatherData, lod); // calculate direct light energy and color
+#endif
 				float3 ambientLight = lerp(_CloudBaseColor, _CloudTopColor, heightFraction); // and ambient
 
 				directLight *= _SunLightFactor; // multiply them by their uniform factors
@@ -366,10 +376,13 @@
 
 				particle.rgb *= particle.a; // multiply color by clouds density
 				res = (1.0 - res.a) * particle + res; // use premultiplied alpha blending to acumulate samples
+				real_calc = real_calc + 1.0;
 			}
 			else // if cloud sample was 0, then increase zero cloud sample counter
 			{
 				zeroCount += 1.0;
+				//if (real_calc > 0.0)
+				//	break;
 			}
 			stepLength = zeroCount > 10.0 ? BIG_STEP : 1.0; // check if we need to do big or small steps
 

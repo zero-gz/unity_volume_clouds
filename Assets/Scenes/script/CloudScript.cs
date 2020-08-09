@@ -13,6 +13,7 @@ public class CloudScript: MonoBehaviour
     public bool debugNoPowderEffect = false;
     public bool debugNoBeer = false;
     public bool debugNoGradient = false;
+    public bool debugNoLightCone = false;
 
     [HeaderAttribute("Performance")]
     [Range(1, 256)]
@@ -269,6 +270,7 @@ public class CloudScript: MonoBehaviour
         updateMaterialKeyword(debugNoPowderEffect, "DEBUG_NO_POWDER_EFFECT");
         updateMaterialKeyword(debugNoHG, "DEBUG_NO_HG");
         updateMaterialKeyword(debugNoGradient, "DEBUG_NO_GRADIENT");
+        updateMaterialKeyword(debugNoLightCone, "DEBUG_NO_LIGHT_CONE");
         
 
     // send uniforms to shader
