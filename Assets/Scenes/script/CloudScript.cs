@@ -8,7 +8,6 @@ public class CloudScript: MonoBehaviour
     [HeaderAttribute("Debugging")]
     public bool debugNoLowFreqNoise = false;
     public bool debugNoHighFreqNoise = false;
-    public bool debugNoCurlNoise = true;
     public bool debugNoHG = false;
     public bool debugNoPowderEffect = false;
     public bool debugNoBeer = false;
@@ -24,10 +23,11 @@ public class CloudScript: MonoBehaviour
     public int downSample = 1;
 
     [HeaderAttribute("Cloud modeling")]
+    public Texture3D _cloudShapeTexture;
+    public Texture3D _cloudDetailTexture;
     public Gradient gradientLow;
     public Gradient gradientMed;
     public Gradient gradientHigh;
-    public Texture2D curlNoise;
     public float startHeight = 1500.0f;
     public float thickness = 4000.0f;
     public float planetSize = 35000.0f;
@@ -42,10 +42,6 @@ public class CloudScript: MonoBehaviour
     public float lowFreqMax = 0.8f;
     [Range(0.0f, 1.0f)]
     public float highFreqModifier = 0.21f;
-    [Range(0.0f, 10.0f)]
-    public float curlDistortScale = 7.44f;
-    [Range(0.0f, 1000.0f)]
-    public float curlDistortAmount = 407.0f;
     [Range(0.0f, 1.0f)]
     public float weatherScale = 0.1f;
 
@@ -79,21 +75,13 @@ public class CloudScript: MonoBehaviour
 
     [HeaderAttribute("Animating")]
     public float globalMultiplier = 1.0f;
-    public float windSpeed = 15.9f;
     public float windDirection = -22.4f;
     public float coverageWindSpeed = 25.0f;
     public float coverageWindDirection = 5.0f;
-    public float highCloudsWindSpeed = 49.2f;
-    public float highCloudsWindDirection = 77.8f;
 
     private Vector3 _windOffset;
     private Vector2 _coverageWindOffset;
-    private Vector2 _highCloudsWindOffset;
     private Vector3 _windDirectionVector;
-    private float _multipliedWindSpeed;
-
-    public Texture3D _cloudShapeTexture;
-    public Texture3D _cloudDetailTexture;
 
     public Material CloudMaterial
     {
@@ -142,24 +130,17 @@ public class CloudScript: MonoBehaviour
             DestroyImmediate(_UpscaleMaterial);
         _windOffset = new Vector3(0.0f, 0.0f, 0.0f);
         _coverageWindOffset = new Vector3(0.5f / (weatherScale * 0.00025f), 0.5f / (weatherScale * 0.00025f));
-        _highCloudsWindOffset = new Vector3(1500.0f, -900.0f);
     }
 
     private void Update()
     {
         // updates wind offsets
-        _multipliedWindSpeed = windSpeed * globalMultiplier;
         float angleWind = windDirection * Mathf.Deg2Rad;
         _windDirectionVector = new Vector3(Mathf.Cos(angleWind), -0.25f, Mathf.Sin(angleWind));
-        _windOffset += _multipliedWindSpeed * _windDirectionVector * Time.deltaTime;
 
         float angleCoverage = coverageWindDirection * Mathf.Deg2Rad;
         Vector2 coverageDirecton = new Vector2(Mathf.Cos(angleCoverage), Mathf.Sin(angleCoverage));
         _coverageWindOffset += coverageWindSpeed * globalMultiplier * coverageDirecton * Time.deltaTime;
-
-        float angleHighClodus = highCloudsWindDirection * Mathf.Deg2Rad;
-        Vector2 highCloudsDirection = new Vector2(Mathf.Cos(angleHighClodus), Mathf.Sin(angleHighClodus));
-        _highCloudsWindOffset += highCloudsWindSpeed * globalMultiplier * highCloudsDirection * Time.deltaTime;
 
         if(Input.GetKey(KeyCode.Space))
         {
@@ -184,40 +165,6 @@ public class CloudScript: MonoBehaviour
     }
     private Camera _CurrentCamera;
 
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.green;
-
-        Matrix4x4 corners = GetFrustumCorners(CurrentCamera);
-        Vector3 pos = CurrentCamera.transform.position;
-
-        for (int x = 0; x < 4; x++)
-        {
-            corners.SetRow(x, CurrentCamera.cameraToWorldMatrix * corners.GetRow(x));
-            Gizmos.DrawLine(pos, pos + (Vector3)(corners.GetRow(x)));
-        }
-
-
-        // UNCOMMENT TO DEBUG RAY DIRECTIONS
-        Gizmos.color = Color.red;
-        int n = 10; // # of intervals
-        for (int x = 1; x < n; x++)
-        {
-            float i_x = (float)x / (float)n;
-
-            var w_top = Vector3.Lerp(corners.GetRow(0), corners.GetRow(1), i_x);
-            var w_bot = Vector3.Lerp(corners.GetRow(3), corners.GetRow(2), i_x);
-            for (int y = 1; y < n; y++)
-            {
-                float i_y = (float)y / (float)n;
-
-                var w = Vector3.Lerp(w_top, w_bot, i_y).normalized;
-                Gizmos.DrawLine(pos + (Vector3)w, pos + (Vector3)w * 1.2f);
-            }
-        }
-
-    }
-
     private Vector4 gradientToVector4(Gradient gradient)
     {
         if (gradient.colorKeys.Length != 4)
@@ -234,14 +181,13 @@ public class CloudScript: MonoBehaviour
     [ImageEffectOpaque]
     public void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        if (CloudMaterial == null || curlNoise == null) // if some script public parameters are missing, do nothing
+        if (CloudMaterial == null) // if some script public parameters are missing, do nothing
         {
             Graphics.Blit(source, destination); // do nothing
             return;
         }
 
         Vector3 cameraPos = CurrentCamera.transform.position;
-        // sunLight.rotation.x 364 -> 339, 175 -> 201
 
         float sunLightFactorUpdated = sunLightFactor;
         float ambientLightFactorUpdated = ambientLightFactor;
@@ -264,7 +210,6 @@ public class CloudScript: MonoBehaviour
 
         updateMaterialKeyword(debugNoLowFreqNoise, "DEBUG_NO_LOW_FREQ_NOISE");
         updateMaterialKeyword(debugNoHighFreqNoise, "DEBUG_NO_HIGH_FREQ_NOISE");
-        updateMaterialKeyword(debugNoCurlNoise, "DEBUG_NO_CURL");
 
         updateMaterialKeyword(debugNoBeer, "DEBUG_NO_BEER");
         updateMaterialKeyword(debugNoPowderEffect, "DEBUG_NO_POWDER_EFFECT");
@@ -272,8 +217,6 @@ public class CloudScript: MonoBehaviour
         updateMaterialKeyword(debugNoGradient, "DEBUG_NO_GRADIENT");
         updateMaterialKeyword(debugNoLightCone, "DEBUG_NO_LIGHT_CONE");
         
-
-    // send uniforms to shader
         CloudMaterial.SetVector("_SunDir", sunLight.transform ? (-sunLight.transform.forward).normalized : Vector3.up);
         CloudMaterial.SetVector("_PlanetCenter", planetZeroCoordinate - new Vector3(0, planetSize, 0));
         CloudMaterial.SetVector("_ZeroPoint", planetZeroCoordinate);
@@ -286,11 +229,7 @@ public class CloudScript: MonoBehaviour
 
         CloudMaterial.SetTexture("_ShapeTexture", _cloudShapeTexture);
         CloudMaterial.SetTexture("_DetailTexture", _cloudDetailTexture);
-        CloudMaterial.SetTexture("_CurlNoise", curlNoise);
         CloudMaterial.SetVector("_Randomness", new Vector4(Random.value, Random.value, Random.value, Random.value));
-
-        CloudMaterial.SetFloat("_CurlDistortAmount", 150.0f + curlDistortAmount);
-        CloudMaterial.SetFloat("_CurlDistortScale", curlDistortScale * noiseScale);
 
         CloudMaterial.SetFloat("_LightConeRadius", lightConeRadius);
         CloudMaterial.SetFloat("_LightStepLength", lightStepLength);
@@ -319,11 +258,9 @@ public class CloudScript: MonoBehaviour
         if(!use_system_weather_texture)
             CloudMaterial.SetTexture("_WeatherTexture", weatherTexture);
 
-        CloudMaterial.SetFloat("_WindSpeed", _multipliedWindSpeed);
         CloudMaterial.SetVector("_WindDirection", _windDirectionVector);
         CloudMaterial.SetVector("_WindOffset", _windOffset);
         CloudMaterial.SetVector("_CoverageWindOffset", _coverageWindOffset);
-        CloudMaterial.SetVector("_HighCloudsWindOffset", _highCloudsWindOffset);
         
         CloudMaterial.SetVector("_Gradient1", gradientToVector4(gradientLow));
         CloudMaterial.SetVector("_Gradient2", gradientToVector4(gradientMed));
@@ -340,7 +277,7 @@ public class CloudScript: MonoBehaviour
         RenderTexture rtClouds = RenderTexture.GetTemporary((int)(source.width / ((float)downSample)), (int)(source.height / ((float)downSample)), 0, source.format, RenderTextureReadWrite.Default, source.antiAliasing);
         CustomGraphicsBlit(source, rtClouds, CloudMaterial, 0);
 
-            UpscaleMaterial.SetTexture("_Clouds", rtClouds);
+        UpscaleMaterial.SetTexture("_Clouds", rtClouds);
         
         // Apply clouds to background
         Graphics.Blit(source, destination, UpscaleMaterial, 0);
@@ -362,13 +299,6 @@ public class CloudScript: MonoBehaviour
         }
     }
 
-    /// \brief Stores the normalized rays representing the camera frustum in a 4x4 matrix.  Each row is a vector.
-    /// 
-    /// The following rays are stored in each row (in eyespace, not worldspace):
-    /// Top Left corner:     row=0
-    /// Top Right corner:    row=1
-    /// Bottom Right corner: row=2
-    /// Bottom Left corner:  row=3
     private Matrix4x4 GetFrustumCorners(Camera cam)
     {
         float camFov = cam.fieldOfView;
@@ -396,16 +326,6 @@ public class CloudScript: MonoBehaviour
         return frustumCorners;
     }
 
-    /// \brief Custom version of Graphics.Blit that encodes frustum corner indices into the input vertices.
-    /// 
-    /// In a shader you can expect the following frustum cornder index information to get passed to the z coordinate:
-    /// Top Left vertex:     z=0, u=0, v=0
-    /// Top Right vertex:    z=1, u=1, v=0
-    /// Bottom Right vertex: z=2, u=1, v=1
-    /// Bottom Left vertex:  z=3, u=1, v=0
-    /// 
-    /// \warning You may need to account for flipped UVs on DirectX machines due to differing UV semantics
-    ///          between OpenGL and DirectX.  Use the shader define UNITY_UV_STARTS_AT_TOP to account for this.
     static void CustomGraphicsBlit(RenderTexture source, RenderTexture dest, Material fxMaterial, int passNr)
     {
         RenderTexture.active = dest;

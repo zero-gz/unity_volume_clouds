@@ -17,7 +17,6 @@
 #pragma target 5.0
 #pragma multi_compile __ DEBUG_NO_LOW_FREQ_NOISE
 #pragma multi_compile __ DEBUG_NO_HIGH_FREQ_NOISE
-#pragma multi_compile __ DEBUG_NO_CURL
 #pragma multi_compile __ DEBUG_NO_BEER
 #pragma multi_compile __ DEBUG_NO_POWDER_EFFECT
 #pragma multi_compile __ DEBUG_NO_HG
@@ -55,7 +54,6 @@
 	uniform sampler3D _ShapeTexture;
 	uniform sampler3D _DetailTexture;
 	uniform sampler2D _WeatherTexture;
-	uniform sampler2D _CurlNoise;
 	uniform sampler2D _BlueNoise;
 	uniform float4 _BlueNoise_TexelSize;
 	uniform float4 _Randomness;
@@ -86,14 +84,10 @@
 	uniform float _Scale;
 	uniform float _DetailScale;
 	uniform float _WeatherScale;
-	uniform float _CurlDistortScale;
-	uniform float _CurlDistortAmount;
 
-	uniform float _WindSpeed;
 	uniform float3 _WindDirection;
 	uniform float3 _WindOffset;
 	uniform float2 _CoverageWindOffset;
-	uniform float2 _HighCloudsWindOffset;
 
 	uniform float2 _LowFreqMinMax;
 	uniform float _HighFreqModifier;
@@ -121,9 +115,6 @@
 
 		// Get the eyespace view ray (normalized)
 		o.ray = _FrustumCornersES[(int)index];
-		// Dividing by z "normalizes" it in the z axis
-		// Therefore multiplying the ray by some number i gives the viewspace position
-		// of the point on the ray with [viewspace z]=i
 		o.ray /= abs(o.ray.z);
 
 		// Transform the ray from eyespace to worldspace
@@ -132,7 +123,6 @@
 		return o;
 	}
 
-	// http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/
 	float rand(float2 co) {
 		float a = 12.9898;
 		float b = 78.233;
@@ -210,11 +200,6 @@
 #else
 		if (cloudSample > 0.0 && sampleDetail) // If cloud sample > 0 then erode it with detail noise
 		{
-#if defined(DEBUG_NO_CURL)
-#else
-			float3 curlNoise = mad(tex2Dlod(_CurlNoise, float4(p.xz * _CurlDistortScale, 0, 0)).rgb, 2.0, -1.0); // sample Curl noise and transform it from [0, 1] to [-1, 1]
-			pos += float3(curlNoise.r, curlNoise.b, curlNoise.g) * heightFraction * _CurlDistortAmount; // distort position with curl noise
-#endif
 			float detailNoise = tex3Dlod(_DetailTexture, float4(pos * _DetailScale, lod)).r; // Sample detail noise
 
 			float highFreqNoiseModifier = lerp(1.0 - detailNoise, detailNoise, saturate(heightFraction * 10.0)); // At lower cloud levels invert it to produce more wispy shapes and higher billowy
@@ -286,10 +271,10 @@
 		const float3 RandomUnitSphere[5] = // precalculated random vectors
 		{
 			{ -0.6, -0.8, -0.2 },
-		{ 1.0, -0.3, 0.0 },
-		{ -0.7, 0.0, 0.7 },
-		{ -0.2, 0.6, -0.8 },
-		{ 0.4, 0.3, 0.9 }
+			{ 1.0, -0.3, 0.0 },
+			{ -0.7, 0.0, 0.7 },
+			{ -0.2, 0.6, -0.8 },
+			{ 0.4, 0.3, 0.9 }
 		};
 
 		float heightFraction;
@@ -392,7 +377,6 @@
 		return res;
 	}
 
-	// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
 	float3 findRayStartPos(float3 rayOrigin, float3 rayDirection, float3 sphereCenter, float radius)
 	{
 		float3 l = rayOrigin - sphereCenter;
@@ -432,7 +416,6 @@
 		}
 	}
 
-	// http://momentsingraphics.de/?p=127#jittering
 	float getRandomRayOffset(float2 uv) // uses blue noise texture to get random ray offset
 	{
 		float noise = tex2D(_BlueNoise, uv).x;
@@ -490,11 +473,6 @@
 		}
 
 		// Ray end pos
-
-		// Convert from depth buffer (eye space) to true distance from camera
-		// This is done by multiplying the eyespace depth by the length of the "z-normalized"
-		// ray (see vert()).  Think of similar triangles: the view-space z-distance between a point
-		// and the camera is proportional to the absolute distance.
 		float depth = Linear01Depth(tex2D(_CameraDepthTexture, duv).r);
 		if (depth == 1.0) {
 			depth = 100.0;
