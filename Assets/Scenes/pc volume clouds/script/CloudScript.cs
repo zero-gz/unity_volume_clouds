@@ -45,7 +45,6 @@ public class CloudScript: MonoBehaviour
     [Range(0.0f, 1.0f)]
     public float weatherScale = 0.1f;
 
-    public bool use_system_weather_texture = true;
     public Texture2D weatherTexture;
     [Range(0.0f, 2.0f)]
     public float coverage = 0.92f;
@@ -255,8 +254,7 @@ public class CloudScript: MonoBehaviour
         
 
         CloudMaterial.SetFloat("_Density", density);
-        if(!use_system_weather_texture)
-            CloudMaterial.SetTexture("_WeatherTexture", weatherTexture);
+        CloudMaterial.SetTexture("_WeatherTexture", weatherTexture);
 
         CloudMaterial.SetVector("_WindDirection", _windDirectionVector);
         CloudMaterial.SetVector("_WindOffset", _windOffset);

@@ -15,6 +15,8 @@
 #pragma vertex vert
 #pragma fragment frag
 #pragma target 5.0
+#pragma enable_d3d11_debug_symbols
+
 #pragma multi_compile __ DEBUG_NO_LOW_FREQ_NOISE
 #pragma multi_compile __ DEBUG_NO_HIGH_FREQ_NOISE
 #pragma multi_compile __ DEBUG_NO_BEER
@@ -54,8 +56,8 @@
 	uniform sampler3D _ShapeTexture;
 	uniform sampler3D _DetailTexture;
 	uniform sampler2D _WeatherTexture;
-	uniform sampler2D _BlueNoise;
-	uniform float4 _BlueNoise_TexelSize;
+	//uniform sampler2D _BlueNoise;
+	//uniform float4 _BlueNoise_TexelSize;
 	uniform float4 _Randomness;
 	uniform float _SampleMultiplier;
 
@@ -172,9 +174,8 @@
 	}
 
 	// samples cloud density
-	float sampleCloudDensity(float3 p, float heightFraction, float3 weatherData, float lod, bool sampleDetail)
+	float sampleCloudDensity(float3 p, float heightFraction, float3 weatherData, bool sampleDetail)
 	{
-		lod = 0.0f;
 		float3 pos = p + _WindOffset; // add wind offset
 		pos += heightFraction * _WindDirection * 700.0; // shear at higher altitude
 
@@ -182,7 +183,7 @@
 		float cloudSample = 0.7;
 		cloudSample = remap(cloudSample, _LowFreqMinMax.x, _LowFreqMinMax.y, 0.0, 1.0);
 #else
-		float cloudSample = tex3Dlod(_ShapeTexture, float4(pos * _Scale, lod)).r; // sample cloud shape texture
+		float cloudSample = tex3Dlod(_ShapeTexture, float4(pos * _Scale, 0)).r; // sample cloud shape texture
 		cloudSample = remap(cloudSample * pow(1.2 - heightFraction, 0.1), _LowFreqMinMax.x, _LowFreqMinMax.y, 0.0, 1.0); // pick certain range from sample texture
 #endif
 		
@@ -200,7 +201,7 @@
 #else
 		if (cloudSample > 0.0 && sampleDetail) // If cloud sample > 0 then erode it with detail noise
 		{
-			float detailNoise = tex3Dlod(_DetailTexture, float4(pos * _DetailScale, lod)).r; // Sample detail noise
+			float detailNoise = tex3Dlod(_DetailTexture, float4(pos * _DetailScale, 0)).r; // Sample detail noise
 
 			float highFreqNoiseModifier = lerp(1.0 - detailNoise, detailNoise, saturate(heightFraction * 10.0)); // At lower cloud levels invert it to produce more wispy shapes and higher billowy
 
@@ -266,7 +267,7 @@
 		return normalize(float3(randSimple(n.x), randSimple(n.y), randSimple(n.z)));
 	}
 
-	float3 sampleConeToLight(float3 pos, float3 lightDir, float cosAngle, float density, float3 initialWeather, float lod)
+	float3 sampleConeToLight(float3 pos, float3 lightDir, float cosAngle, float density, float3 initialWeather)
 	{
 		const float3 RandomUnitSphere[5] = // precalculated random vectors
 		{
@@ -288,13 +289,13 @@
 			// sample cloud
 			heightFraction = getHeightFractionForPoint(p); 
 			weatherData = sampleWeather(p);
-			densityAlongCone += sampleCloudDensity(p, heightFraction, weatherData, lod + ((float)i) * 0.5, true) * weatherDensity(weatherData);
+			densityAlongCone += sampleCloudDensity(p, heightFraction, weatherData, true) * weatherDensity(weatherData);
 		}
 
 		pos += 32.0 * _LightStepLength * lightDir; // light sample from further away
 		weatherData = sampleWeather(pos);
 		heightFraction = getHeightFractionForPoint(pos);
-		densityAlongCone += sampleCloudDensity(pos, heightFraction, weatherData, lod + 2, false) * weatherDensity(weatherData) * 3.0;
+		densityAlongCone += sampleCloudDensity(pos, heightFraction, weatherData, false) * weatherDensity(weatherData) * 3.0;
 
 		return calculateLightEnergy(densityAlongCone, cosAngle, density) * _SunColor;
 	}
@@ -305,7 +306,6 @@
 	{
 		float3 pos = ro;
 		fixed4 res = 0.0; // cloud color
-		float lod = 0.0;
 		float zeroCount = 0.0; // number of times cloud sample has been 0
 		float stepLength = BIG_STEP; // step length multiplier, 1.0 when doing small steps
 		float real_calc = 0.0;
@@ -332,7 +332,7 @@
 				continue;
 			}
 
-			float cloudDensity = saturate(sampleCloudDensity(pos, heightFraction, weatherData, lod, true)); // sample the cloud
+			float cloudDensity = saturate(sampleCloudDensity(pos, heightFraction, weatherData, true)); // sample the cloud
 
 			if (cloudDensity > 0.0) // check if cloud density is > 0
 			{
@@ -343,14 +343,14 @@
 					i -= stepLength - 1.0; // then move back, previous 0 density location + one small step
 					pos -= rd * (stepLength - 1.0);
 					weatherData = sampleWeather(pos); // sample weather
-					cloudDensity = saturate(sampleCloudDensity(pos, heightFraction, weatherData, lod, true)); // and cloud again
+					cloudDensity = saturate(sampleCloudDensity(pos, heightFraction, weatherData, true)); // and cloud again
 				}
 
 				float4 particle = cloudDensity; // construct cloud particle
 #if DEBUG_NO_LIGHT_CONE
 				float3 directLight = calculateLightEnergy(cloudDensity, cosAngle, cloudDensity) * _SunColor;
 #else
-				float3 directLight = sampleConeToLight(pos, _SunDir, cosAngle, cloudDensity, weatherData, lod); // calculate direct light energy and color
+				float3 directLight = sampleConeToLight(pos, _SunDir, cosAngle, cloudDensity, weatherData); // calculate direct light energy and color
 #endif
 				float3 ambientLight = lerp(_CloudBaseColor, _CloudTopColor, heightFraction); // and ambient
 
@@ -416,12 +416,12 @@
 		}
 	}
 
-	float getRandomRayOffset(float2 uv) // uses blue noise texture to get random ray offset
-	{
-		float noise = tex2D(_BlueNoise, uv).x;
-		noise = mad(noise, 2.0, -1.0);
-		return noise;
-	}
+	//float getRandomRayOffset(float2 uv) // uses blue noise texture to get random ray offset
+	//{
+	//	float noise = tex2D(_BlueNoise, uv).x;
+	//	noise = mad(noise, 2.0, -1.0);
+	//	return noise;
+	//}
 
 	fixed4 frag(v2f i) : SV_Target
 	{
