@@ -140,11 +140,6 @@ public class CloudScript: MonoBehaviour
         float angleCoverage = coverageWindDirection * Mathf.Deg2Rad;
         Vector2 coverageDirecton = new Vector2(Mathf.Cos(angleCoverage), Mathf.Sin(angleCoverage));
         _coverageWindOffset += coverageWindSpeed * globalMultiplier * coverageDirecton * Time.deltaTime;
-
-        if(Input.GetKey(KeyCode.Space))
-        {
-            save_3d_tex();
-        }
     }
 
     private void OnDestroy()
@@ -354,22 +349,5 @@ public class CloudScript: MonoBehaviour
 
         GL.End();
         GL.PopMatrix();
-    }
-
-    void save_3d_tex()
-    {
-        if (_cloudShapeTexture) // if shape texture is missing load it in
-        {
-            AssetDatabase.CreateAsset(_cloudShapeTexture, "Assets/Textures/perlin_worley_3d.asset");
-            Debug.Log("perlin worley saved ok!");
-        }
-
-        if (_cloudDetailTexture) // if detail texture is missing load it in
-        {
-            AssetDatabase.CreateAsset(_cloudDetailTexture, "Assets/Textures/detail_worley_3d.asset");
-            Debug.Log("detail worley saved ok!!!!");
-        }
-
-        AssetDatabase.Refresh();
     }
 }
