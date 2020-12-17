@@ -31,7 +31,9 @@ public class util{
             return;
         }
         System.IO.File.WriteAllBytes(save_path, data);
+#if UNITY_EDITOR
         AssetDatabase.Refresh();
+#endif
     }
 
     public static void save_screen_tex(string save_path, int start_x = 0, int start_y = 0, int width = 0,int height = 0)
@@ -168,8 +170,10 @@ public class util{
         StreamWriter streamWriter = new StreamWriter(save_path);
         streamWriter.Write(trans_mesh_to_string(mf, new Vector3(-1f, 1f, 1f)));
         streamWriter.Close();
-        
+
+#if UNITY_EDITOR
         AssetDatabase.Refresh();
+#endif
     }
     // -----------------------------------------------------------------------------------------------------------------
     public static Material change_material(GameObject obj, string shader_name)
