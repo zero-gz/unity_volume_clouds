@@ -129,6 +129,8 @@ public class CloudScript: MonoBehaviour
             DestroyImmediate(_UpscaleMaterial);
         _windOffset = new Vector3(0.0f, 0.0f, 0.0f);
         _coverageWindOffset = new Vector3(0.5f / (weatherScale * 0.00025f), 0.5f / (weatherScale * 0.00025f));
+        if(Camera.current)
+            Camera.current.depthTextureMode |= DepthTextureMode.Depth;
     }
 
     private void Update()
@@ -271,9 +273,10 @@ public class CloudScript: MonoBehaviour
         CustomGraphicsBlit(source, rtClouds, CloudMaterial, 0);
 
         UpscaleMaterial.SetTexture("_Clouds", rtClouds);
-        
+
         // Apply clouds to background
         Graphics.Blit(source, destination, UpscaleMaterial, 0);
+        //Graphics.Blit(rtClouds, destination);
         RenderTexture.ReleaseTemporary(rtClouds);
     }
 
