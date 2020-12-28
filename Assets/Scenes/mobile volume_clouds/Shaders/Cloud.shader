@@ -1,4 +1,4 @@
-﻿Shader "Custom/Cloud" {
+﻿Shader "Mobile Clouds/Cloud" {
 Properties {
     _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
 	_flow_speed("flow speed", Range(0, 3)) = 0.4

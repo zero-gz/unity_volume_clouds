@@ -213,7 +213,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &430435759
 GameObject:
@@ -329,8 +329,62 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 16.404001, y: 0, z: 0}
+--- !u!1 &550492008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 550492010}
+  - component: {fileID: 550492009}
+  m_Layer: 0
+  m_Name: one_clouds4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &550492009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 550492008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a338cdfe8eca534981bfb77cd1b4959, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clouds_mesh: {fileID: 4300000, guid: dab107f11a4db784e8a03faaf93ef437, type: 3}
+  clouds_mtl: {fileID: 2100000, guid: 4a842d3b540b39340bf09d0933e5c996, type: 2}
+  cloudScale: 73.15
+  density: 3
+  height: 7.3
+  offset_x: -2.24
+  offset_y: -0.4
+  offset_z: 4.1
+  flow_speed: 1
+  clouds_fade: 1
+  refreshing: 0
+--- !u!4 &550492010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 550492008}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -2.53, z: 6.55}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &876191564
 GameObject:
   m_ObjectHideFlags: 0
@@ -363,12 +417,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clouds_mesh: {fileID: 4300000, guid: dab107f11a4db784e8a03faaf93ef437, type: 3}
   clouds_mtl: {fileID: 2100000, guid: 4a842d3b540b39340bf09d0933e5c996, type: 2}
-  cloudScale: 17
-  density: 6
-  height: 10
-  offset_x: 0
-  offset_y: 0
-  offset_z: 4
+  cloudScale: 32.99
+  density: 4
+  height: 8
+  offset_x: 1.41
+  offset_y: 6.18
+  offset_z: 6.09
   flow_speed: 1
   clouds_fade: 1
   refreshing: 0
@@ -380,7 +434,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 876191564}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 8.45}
+  m_LocalPosition: {x: 0, y: 6.24, z: 10.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -425,5 +479,99 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: cloudScale
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: density
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: height
+      value: 8.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: offset_x
+      value: 2.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: offset_y
+      value: 9.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: offset_z
+      value: 6.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: flow_speed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114074836896833780, guid: ef76e70636547fb4ba7bfe2ccc1fa830,
+        type: 3}
+      propertyPath: refreshing
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ef76e70636547fb4ba7bfe2ccc1fa830, type: 3}
+--- !u!1 &2120071540
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2120071542}
+  - component: {fileID: 2120071541}
+  m_Layer: 0
+  m_Name: one_clouds3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2120071541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2120071540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a338cdfe8eca534981bfb77cd1b4959, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clouds_mesh: {fileID: 4300000, guid: dab107f11a4db784e8a03faaf93ef437, type: 3}
+  clouds_mtl: {fileID: 2100000, guid: 4a842d3b540b39340bf09d0933e5c996, type: 2}
+  cloudScale: 73.15
+  density: 4
+  height: 7.2
+  offset_x: 0.64
+  offset_y: 1.73
+  offset_z: 27.36
+  flow_speed: 1
+  clouds_fade: 1
+  refreshing: 0
+--- !u!4 &2120071542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2120071540}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -4.02, z: 20.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

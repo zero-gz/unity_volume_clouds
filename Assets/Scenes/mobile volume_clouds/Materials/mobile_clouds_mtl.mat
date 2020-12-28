@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: cloud
+  m_Name: mobile_clouds_mtl
   m_Shader: {fileID: 4800000, guid: 1842792accfa9b847af7c750d1ed4cca, type: 3}
   m_ShaderKeywords: _ALPHAPREMULTIPLY_ON
   m_LightmapFlags: 4
