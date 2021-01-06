@@ -19,6 +19,7 @@ public class GenerateClouds : MonoBehaviour
     public float clouds_fade = 1.0f;
 
     public bool refreshing = false;
+    public static List<GameObject> cloudsObjects = new List<GameObject>(512);
 
     void Awake()
     {
@@ -31,6 +32,7 @@ public class GenerateClouds : MonoBehaviour
         {
             foreach (Transform child in transform)
             {
+                cloudsObjects.Remove(child.gameObject);
                 GameObject.Destroy(child.gameObject);
             }
 
@@ -56,6 +58,7 @@ public class GenerateClouds : MonoBehaviour
             {
                 //Transform cloud = Instantiate(cloudPrefab);
                 GameObject cloud = new GameObject();
+                cloud.layer = gameObject.layer;
                 cloud.AddComponent<MeshFilter>();
                 cloud.GetComponent<MeshFilter>().mesh = clouds_mesh;
 
@@ -83,7 +86,7 @@ public class GenerateClouds : MonoBehaviour
                 cloud.transform.localRotation = Quaternion.Euler(0, (float)Random.Range(0, 180), 0);
                 // join the newly created cloud into the CloudGroup parent object
                 cloud.transform.SetParent(transform, false);
-
+                cloudsObjects.Add(cloud);
             }
         }
     }
